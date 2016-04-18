@@ -5,4 +5,4 @@ tmpfs                    920M  144K  920M   1% /dev/shm
 tmpfs                    920M  8.7M  912M   1% /run
 tmpfs                    920M     0  920M   0% /sys/fs/cgroup
 /dev/sda1                497M  176M  321M  36% /boot
-tmpfs                    184M   28K  184M   1% /run/user/1000
+tmpfs                    184M   20K  184M   1% /run/user/1000

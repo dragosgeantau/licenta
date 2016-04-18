@@ -21,13 +21,13 @@ class AgentRrd
 	end
 
 	def updateState machineParams
-		cpuUsage = machineParams[:systemCpuUsage].to_i + machineParams[:userCpuUsage].to_i
-		memoryUsage = machineParams[:usedMem].to_i
-		swapUsage = machineParams[:usedSwap].to_i
+		cpuUsage = machineParams["systemCpuUsage"].to_f + machineParams["userCpuUsage"].to_f
+		memoryUsage = machineParams["usedMem"].to_i / 1000
+		swapUsage = machineParams["usedSwap"].to_i / 1000
 		diskUsage = 0
 		machineParams.each do |key, value|
 			if key.to_s.include? 'sda'
-				diskUsage += value.to_i
+				diskUsage += value.split[3].to_i
 			end
 		end
 

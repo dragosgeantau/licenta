@@ -4,12 +4,12 @@ require 'json'
 
 class Agent
 
-	def initialize(*args)
-		@hostname = "localhost"
-		@port = 64867
-		@sendDataDelay = 10
+	def initialize(host, port = 64867, sendDelay = 10)
+		@hostname = host
+		@port = port
+		@sendDataDelay = sendDelay
 		@tempHash = {}
-		@Id = rand(100)
+		@Id = nil
 	end
 
 	def topCommand outFileName
@@ -20,7 +20,7 @@ class Agent
 		line = inFile.gets
 		@tempHash['upTime'] = line.split(' ')[4].gsub(',', '')
 		@tempHash['serverTime'] = line.split(' ')[2]
-		@tempHash['noOfUsers'] = line.split(' ')[5]
+		@tempHash['noOfUsers'] = line.split(' ')[6]
 
 		line = inFile.gets
 		@tempHash['noOfTasks'] = line.split(' ')[1]
@@ -30,19 +30,19 @@ class Agent
 		@tempHash['zombieTasks'] = line.split(' ')[9]
 
 		line = inFile.gets
-		@tempHash['userCpuUsage'] = line.split(' ')[1].split('%').first
-		@tempHash['systemCpuUsage'] = line.split(' ')[2].split('%').first
-		@tempHash['idleCpuUsage'] = line.split(' ')[4].split('%').first
+		@tempHash['userCpuUsage'] = line.split(' ')[1]
+		@tempHash['systemCpuUsage'] = line.split(' ')[3]
+		@tempHash['idleCpuUsage'] = line.split(' ')[7]
 
 		line = inFile.gets
-		@tempHash['totalMem'] = line.split(' ')[1].split('k').first
-		@tempHash['usedMem'] = line.split(' ')[3].split('k').first
-		@tempHash['freeMem'] = line.split(' ')[5].split('k').first
+		@tempHash['totalMem'] = line.split(' ')[3]
+		@tempHash['usedMem'] = line.split(' ')[7]
+		@tempHash['freeMem'] = line.split(' ')[5]
 
 		line = inFile.gets
-		@tempHash['totalSwap'] = line.split(' ')[1].split('k').first
-		@tempHash['usedSwap'] = line.split(' ')[3].split('k').first
-		@tempHash['freeSwap'] = line.split(' ')[5].split('k').first
+		@tempHash['totalSwap'] = line.split(' ')[2]
+		@tempHash['usedSwap'] = line.split(' ')[6]
+		@tempHash['freeSwap'] = line.split(' ')[4]
 	end
 
 	def dfCommand outFileName
@@ -51,9 +51,9 @@ class Agent
 		line = inFile.gets
 		while(line = inFile.gets)
 			line = line.split(' ')
-			@tempHash[line[0]] = line[1].gsub('G', '').gsub('K', '') + ' '
-			@tempHash[line[0]] += line[2].gsub('G', '').gsub('K', '') + ' '
-			@tempHash[line[0]] += line[3].gsub('G', '').gsub('K', '') + ' '
+			@tempHash[line[0]] = line[1].gsub('G', '').gsub('M', '').gsub('K', '') + ' '
+			@tempHash[line[0]] += line[2].gsub('G', '').gsub('M', '').gsub('K', '') + ' '
+			@tempHash[line[0]] += line[3].gsub('G', '').gsub('M', '').gsub('K', '') + ' '
 			@tempHash[line[0]] += line[4].gsub('%', '') + ' '
 		end
 
@@ -74,10 +74,8 @@ class Agent
 		puts "Establishing connection...\n"
 		#Opening socket
 		server = TCPSocket.open(@hostname, @port)
-		
-		#sending id
-		puts "Sending id...\n"
-		server.print(@Id.to_s + "\n")
+
+		#Reciving status
 		puts server.gets
 
 		#gathering data
@@ -88,7 +86,7 @@ class Agent
 		#sending data to server
 		server.print(@tempHash.to_json)
 		server.print("\n")
-
+		
 		puts "Closing connection...\n\n"
 		#closing connection
 		server.close
@@ -102,3 +100,6 @@ class Agent
 	end
 
 end
+
+a = Agent.new("localhost")
+a.run

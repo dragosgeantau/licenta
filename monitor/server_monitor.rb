@@ -9,19 +9,8 @@ class ServerMonitor
 
 	def initialize(pathToDB = "", port = 64867)
 		@agents = {}
-		@db = SQLite3::Database.open pathToDB + "agents.db"
+		@db = SQLite3::Database.open pathToDB + "monitor_database.sqlite3"
 		@port = port
-	end
-
-	def conigureDB pathToDB = ""
-		@db = SQLite3::Database.new pathToDB + "agents.db"
-		query = "CREATE TABLE agents(" +
-							"id INTEGER PRIMARY KEY AUTOINCREMENT," +
-							"ip VARCHAR2(50)," +
-							"port VARCHAR2(10)," +
-							"host_name VARCHAR2(50)" +
-						");"
-		@db.execute query
 	end
 
 	def getAgentId client

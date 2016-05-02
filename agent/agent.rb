@@ -4,12 +4,13 @@ require 'json'
 
 class Agent
 
-	def initialize(host, port = 64867, sendDelay = 10)
+	def initialize(host, port = 64867, sendDelay = 10, username = "")
 		@hostname = host
 		@port = port
 		@sendDataDelay = sendDelay
 		@tempHash = {}
 		@Id = nil
+		@username = username #if no username is specified the agent can be monitored by all
 	end
 
 	def topCommand outFileName
@@ -75,6 +76,8 @@ class Agent
 		#Opening socket
 		server = TCPSocket.open(@hostname, @port)
 
+		server.print(@username + "\n")
+
 		#Reciving status
 		puts server.gets
 
@@ -101,5 +104,5 @@ class Agent
 
 end
 
-a = Agent.new("localhost")
+a = Agent.new("localhost", 64867 ,10)
 a.run

@@ -17,29 +17,14 @@ class Agent
     @mysqlServer = Mysql::new(db_host, db_user, db_pass)
 	end
 
-	def send_data
-		puts "Establishing connection...\n"
-		#Opening socket
-		server = TCPSocket.open(@hostname, @port)
+	def writeResult fileName
+		outFile = File.open(fileName, 'w')
 
-		server.print(@username + "\n")
+		@tempHash.each do |info, value|
+			outFile.puts info + ' ' + value
+		end
 
-		#Reciving status
-		puts server.gets
-
-		#gathering data
-		topCommand('topCommand.txt')
-		dfCommand('dfCommand.txt')
-    mysqlInterogation
-
-		puts "Sending data to server..."
-		#sending data to server
-		server.print(@tempHash.to_json)
-		server.print("\n")
-
-		puts "Closing connection...\n\n"
-		#closing connection
-		server.close
+		outFile.close
 	end
 
 	def run
@@ -49,7 +34,7 @@ class Agent
 		}
 	end
 
-
+	private
 		def topCommand outFileName
 			%x(top -bn1 > #{outFileName})
 
@@ -98,14 +83,29 @@ class Agent
 
 		end
 
-		def writeResult fileName
-		outFile = File.open(fileName, 'w')
+		def send_data
+		puts "Establishing connection...\n"
+		#Opening socket
+		server = TCPSocket.open(@hostname, @port)
 
-		@tempHash.each do |info, value|
-			outFile.puts info + ' ' + value	
-		end
+		server.print(@username + "\n")
 
-		outFile.close
+		#Reciving status
+		puts server.gets
+
+		#gathering data
+		topCommand('topCommand.txt')
+		dfCommand('dfCommand.txt')
+		mysqlInterogation
+
+		puts "Sending data to server..."
+		#sending data to server
+		server.print(@tempHash.to_json)
+		server.print("\n")
+
+		puts "Closing connection...\n\n"
+		#closing connection
+		server.close
 	end
 
 		def mysqlInterogation
@@ -116,53 +116,6 @@ class Agent
       end
 
       @tempHash['mysqlServer'] = serverStatus
-    end
-
-    def categorize hash
-      hash = group_hash hash, 0
-      hash['Com'] = group_hash hash['Com'], 1
-      hash['Com']['show'] = group_hash hash['Com']['show'], 2
-      hash['Innodb'] = group_hash hash['Innodb'], 1
-      hash['Innodb']['buffer'] = group_hash hash['Innodb']['buffer'], 3
-      hash['Handler'] = group_hash hash['Handler'], 1
-      hash['Performance'] = group_hash hash['Handler'], 1
-      hash['Ssl'] = group_hash hash['Ssl'], 1
-
-      hash
-    end
-
-    def group_hash (hash, order = 0)
-      result_hash = {}
-
-      hash.each do |variable, value|
-        parts = variable.split('_')
-
-        if result_hash[parts[order]]
-          result_hash[parts[order]] << [variable, value]
-        else
-          result_hash[parts[order]] = []
-          result_hash[parts[order]] << [variable, value]
-        end
-      end
-
-      result_hash
-    end
-
-    def compress_hash hash
-      hash['Other'] = []
-
-      hash.each do |key, value|
-        if value.class.to_s == 'Array'
-          if value.count == 1
-            hash['Other'] << value.flatten
-            hash.delete(key)
-          end
-        else
-          hash[key] = compress_hash hash[key]
-        end
-      end
-
-      hash
     end
 
 end

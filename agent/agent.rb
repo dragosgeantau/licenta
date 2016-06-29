@@ -5,8 +5,6 @@ require 'mysql'
 
 class Agent
 
-  @categoryes = %w(Aborted Binlog Bytes Com_alter Com_create Com_delete Com_drop Com_ha Com_insert Com_a)
-
 	def initialize(host, port = 64867, sendDelay = 10, username = '', db_host, db_user, db_pass)
 		@hostname = host
 		@port = port
@@ -14,7 +12,7 @@ class Agent
 		@tempHash = {}
 		@Id = nil
 		@username = username #if no username is specified the agent can be monitored by all
-    @mysqlServer = Mysql::new(db_host, db_user, db_pass)
+    	@mysqlServer = Mysql::new(db_host, db_user, db_pass)
 	end
 
 	def writeResult fileName
@@ -71,52 +69,52 @@ class Agent
 		def dfCommand outFileName
 			%x(df -h > #{outFileName})
 			inFile = File.open(outFileName, 'r')
-      @tempHash['diskUsage'] = {}
+      		@tempHash['diskUsage'] = {}
 			line = inFile.gets
 			while(line = inFile.gets)
 				line = line.split(' ')
-        @tempHash['diskUsage'][line[0]] = line[1].gsub('G', '').gsub('M', '').gsub('K', '') + ' '
-        @tempHash['diskUsage'][line[0]] += line[2].gsub('G', '').gsub('M', '').gsub('K', '') + ' '
-        @tempHash['diskUsage'][line[0]] += line[3].gsub('G', '').gsub('M', '').gsub('K', '') + ' '
-        @tempHash['diskUsage'][line[0]] += line[4].gsub('%', '') + ' '
+		        @tempHash['diskUsage'][line[0]] = line[1].gsub('G', '').gsub('M', '').gsub('K', '') + ' '
+		        @tempHash['diskUsage'][line[0]] += line[2].gsub('G', '').gsub('M', '').gsub('K', '') + ' '
+		        @tempHash['diskUsage'][line[0]] += line[3].gsub('G', '').gsub('M', '').gsub('K', '') + ' '
+		        @tempHash['diskUsage'][line[0]] += line[4].gsub('%', '') + ' '
 			end
 
 		end
 
 		def send_data
-		puts "Establishing connection...\n"
-		#Opening socket
-		server = TCPSocket.open(@hostname, @port)
+			puts "Establishing connection...\n"
+			#Opening socket
+			server = TCPSocket.open(@hostname, @port)
 
-		server.print(@username + "\n")
+			server.print(@username + "\n")
 
-		#Reciving status
-		puts server.gets
+			#Reciving status
+			puts server.gets
 
-		#gathering data
-		topCommand('topCommand.txt')
-		dfCommand('dfCommand.txt')
-		mysqlInterogation
+			#gathering data
+			topCommand('topCommand.txt')
+			dfCommand('dfCommand.txt')
+			mysqlInterogation
 
-		puts "Sending data to server..."
-		#sending data to server
-		server.print(@tempHash.to_json)
-		server.print("\n")
+			puts "Sending data to server..."
+			#sending data to server
+			server.print(@tempHash.to_json)
+			server.print("\n")
 
-		puts "Closing connection...\n\n"
-		#closing connection
-		server.close
-	end
+			puts "Closing connection...\n\n"
+			#closing connection
+			server.close
+		end
 
 		def mysqlInterogation
-      serverStatus = {}
+	      	serverStatus = {}
 
-      @mysqlServer.query("SHOW STATUS").each do |variable, value|
-        serverStatus[variable] = value
-      end
+	      	@mysqlServer.query("SHOW STATUS").each do |variable, value|
+	        	serverStatus[variable] = value
+	      	end
 
-      @tempHash['mysqlServer'] = serverStatus
-    end
+	      	@tempHash['mysqlServer'] = serverStatus
+    	end
 
 end
 
